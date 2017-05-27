@@ -34,3 +34,6 @@
 /attendance_daemon.info/target/
 /build-number.txt
 /_dist
+.idea/
+diploma.iml
+src/
