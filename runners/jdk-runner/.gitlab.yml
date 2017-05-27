@@ -1,0 +1,132 @@
+image: iasa/jdk-runner
+
+variables:
+  MAVEN_OPTS: -Dmaven.repo.local=/cache/maven.repository
+  MAVEN_CLI_OPTS: "-U -s $CI_PROJECT_DIR/_build/mvn-all/settings.xml --threads 1C --batch-mode"
+  GIT_STRATEGY: fetch
+  GIT_DEPTH: "2"
+
+before_script:
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$DEPLOY_KEY")
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+stages:
+  - build
+  - deploy
+
+test_job:
+  stage: build
+  only:
+    - branches
+  except:
+    - tags
+  script:
+    - cd $CI_PROJECT_DIR/_build/mvn-all && mvn install -U -s settings.xml --threads 1C --batch-mode;
+attendance_activation_job:
+  stage: build
+  only:
+    - /^v.*$/
+  except:
+    - branches
+#  when: manual
+  script:
+    - IFS='v' read -ra ver <<< "$CI_BUILD_TAG" && version=${ver[1]}
+    - export FORCE_VERSION=$version
+    - ant -Dmaven.options="$MAVEN_CLI_OPTS -DskipTests=true" attendance-update-activation-arm-linux
+  artifacts:
+    name: attendance.activation
+    paths:
+      - "*.arm-linux.activation/*"
+
+attendance_info_job:
+  stage: build
+  only:
+    - /^v.*$/
+  except:
+    - branches
+#  when: manual
+  script:
+    - IFS='v' read -ra ver <<< "$CI_BUILD_TAG" && version=${ver[1]}
+    - export FORCE_VERSION=$version
+    - ant -Dmaven.options="$MAVEN_CLI_OPTS -DskipTests=true" attendance-update-info-arm-linux
+  artifacts:
+    name: attendance.info
+    paths:
+      - "*.arm-linux.info/*"
+
+attendance_raspberry_job:
+  stage: build
+  only:
+    - /^v.*$/
+  except:
+    - branches
+#  when: manual
+  script:
+    - IFS='v' read -ra ver <<< "$CI_BUILD_TAG" && version=${ver[1]}
+    - export FORCE_VERSION=$version
+    - ant -Dmaven.options="$MAVEN_CLI_OPTS -DskipTests=true" attendance-update-raspberry-linux
+  artifacts:
+    name: attendance_raspberry
+    paths:
+      - "*.linux.raspberry/*"
+
+attendance_activation_deploy:
+  stage: deploy
+  dependencies:
+    - attendance_activation_job
+  only:
+    - /^v.*$/
+  except:
+    - branches
+  when: manual
+  script:
+    - IFS='v' read -ra ver <<< "$CI_BUILD_TAG" && version=${ver[1]}
+    - export mod="arm-linux.activation"
+    - ssh server.host.name "rm -rf attendance && mkdir attendance && cd attendance && mkdir $version.$mod"
+    - scp $version.$mod/attendance.$mod.tar.gz deploy@server.host.name:/home/deploy/attendance/$version.$mod
+    - scp $version.$mod/attendance.$mod.sh server_host:/home/deploy/attendance/$version.$mod
+    - ssh server_host "export JAVA_RUNTIMES=/home/deploy/cache/runtimes && cd attendance/$version.$mod && chmod +x attendance.$mod.sh && ./attendance.$mod.sh"
+    - ssh server_host "cp -rf attendance/$version.$mod/dist/updates/. /home/deploy/targets/attendance/paybox/"
+    - ssh server_host "cp -rf attendance/$version.$mod/dist/*.tar.gz /home/deploy/targets/attendance/"
+
+attendance_info_deploy:
+  stage: deploy
+  dependencies:
+    - attendance_info_job
+  only:
+    - /^v.*$/
+  except:
+    - branches
+  when: manual
+  script:
+    - IFS='v' read -ra ver <<< "$CI_BUILD_TAG" && version=${ver[1]}
+    - export mod="arm-linux.info"
+    - ssh deploy@server.host.name "rm -rf attendance && mkdir attendance && cd attendance && mkdir $version.$mod"
+    - scp $version.$mod/attendance.$mod.tar.gz deploy@server.host.name:/home/deploy/attendance/$version.$mod
+    - scp $version.$mod/attendance.$mod.sh deploy@server.host.name:/home/deploy/attendance/$version.$mod
+    - ssh deploy@server.host.name "export JAVA_RUNTIMES=/home/deploy/cache/runtimes && cd attendance/$version.$mod && chmod +x attendance.$mod.sh && ./attendance.$mod.sh"
+    - ssh deploy@server.host.name "cp -rf attendance/$version.$mod/dist/updates/. /home/deploy/targets/attendance/paybox/"
+    - ssh deploy@server.host.name "cp -rf attendance/$version.$mod/dist/*.tar.gz /home/deploy/targets/attendance/"
+
+attendance_raspberry_deploy:
+  stage: deploy
+  dependencies:
+    - attendance_raspberry_job
+  only:
+    - /^v.*$/
+  except:
+    - branches
+  when: manual
+  script:
+    - IFS='v' read -ra ver <<< "$CI_BUILD_TAG" && version=${ver[1]}
+    - export mod="linux.raspberry"
+    - ssh deploy@server.host.name "rm -rf attendance && mkdir attendance && cd attendance && mkdir $version.$mod"
+    - scp $version.$mod/attendance.$mod.tar.gz deploy@server.host.name:/home/deploy/attendance/$version.$mod
+    - scp $version.$mod/attendance.$mod.sh deploy@server.host.name:/home/deploy/attendance/$version.$mod
+    - ssh deploy@server.host.name "export JAVA_RUNTIMES=/home/deploy/cache/runtimes && cd attendance/$version.$mod && chmod +x attendance.$mod.sh && ./attendance.$mod.sh"
+    - ssh deploy@server.host.name "cp -rf attendance/$version.$mod/dist/updates/. /home/deploy/targets/attendance/paybox/"
+    - ssh deploy@server.host.name "cp -rf attendance/$version.$mod/dist/*.tar.gz /home/deploy/targets/attendance/"
+
+
