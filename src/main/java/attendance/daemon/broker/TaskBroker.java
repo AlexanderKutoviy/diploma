@@ -1,19 +1,13 @@
 package attendance.daemon.broker;
 
+import attendance.daemon.worker.MailSenderWorker;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.oracle.jrockit.jfr.InvalidValueException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.skyscreamer.jsonassert.JSONCompare;
 import org.skyscreamer.jsonassert.JSONCompareMode;
-import tit.db.SqlQuery;
-import tit.db.SqlSimpleUpdate;
-import tit.utils.mapper.InvalidValueException;
-import tit.utils.mapper.MissingPropertyException;
-import tit.utils.mapper.PropertiesMapper;
-import titanium.mail.sender.dao.Provider;
-import titanium.mail.sender.dao.Task;
-import titanium.mail.sender.worker.MailSenderWorker;
 
 import javax.inject.Inject;
 import java.sql.Connection;

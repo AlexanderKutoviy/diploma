@@ -1,7 +1,7 @@
 package attendance.daemon.broker;
 
-import titanium.mail.sender.dao.DaemonModel;
-import titanium.mail.sender.logparser.Daemon;
+import attendance.daemon.dao.DaemonModel;
+import attendance.daemon.logparser.Daemon;
 
 public class DaemonHolder {
 

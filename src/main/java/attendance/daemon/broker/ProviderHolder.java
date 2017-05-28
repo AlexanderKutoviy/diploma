@@ -1,8 +1,7 @@
 package attendance.daemon.broker;
 
-
-import titanium.mail.sender.dao.Provider;
-import titanium.mail.sender.provider.MailProvider;
+import attendance.daemon.dao.Provider;
+import attendance.daemon.provider.MailProvider;
 
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;

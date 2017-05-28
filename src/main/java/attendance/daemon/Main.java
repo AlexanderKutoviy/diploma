@@ -1,16 +1,14 @@
 package attendance.daemon;
 
+import attendance.daemon.broker.DaemonBroker;
+import attendance.daemon.broker.TaskBroker;
+import attendance.daemon.modules.MainModule;
+import attendance.daemon.worker.MailSenderWorker;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.io.IoBuilder;
-import tit.utils.ConfigMap;
-import titanium.mail.sender.broker.DaemonBroker;
-import titanium.mail.sender.broker.TaskBroker;
-import titanium.mail.sender.modules.MainModule;
-import titanium.mail.sender.worker.MailSenderWorker;
 
 import javax.inject.Singleton;
 import java.io.File;
