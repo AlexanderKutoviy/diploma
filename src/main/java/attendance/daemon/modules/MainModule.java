@@ -1,11 +1,11 @@
 package attendance.daemon.modules;
 
+import attendance.daemon.broker.DaemonBroker;
+import attendance.daemon.broker.TaskBroker;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import dagger.Module;
 import dagger.Provides;
 import tit.utils.ConfigMap;
-import titanium.mail.sender.broker.DaemonBroker;
-import titanium.mail.sender.broker.TaskBroker;
 
 import javax.inject.Singleton;
 import java.util.Properties;
